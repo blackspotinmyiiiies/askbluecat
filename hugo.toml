@@ -1,13 +1,8 @@
 baseURL = 'https://askbluecat.com/'
 languageCode = 'en-us'
-title = 'AskBlueCat | Offensive & Defensive Ops'
-theme = 'PaperMod'
+title = 'AskBlueCat | Security Research'
+theme = 'ananke'
 
 [params]
-    defaultTheme = "dark" # Start in dark mode by default
-    showCodeCopyButtons = true # Essential for cybersecurity blogs
-    displayFullContent = false
-    
-    [params.homeInfoParams]
-        Title = "AskBlueCat"
-        Content = "Strategic Operator. Penetration Tester. Offensive & Defensive Research."
+  description = "Offensive and Defensive Strategic Operations"
+  background_color_class = "bg-black" # You can use bg-blue, bg-gray, etc.
