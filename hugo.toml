@@ -1,4 +1,13 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://askbluecat.com/'
 languageCode = 'en-us'
-title = 'My New Hugo Site'
-theme = 'ananke'
+title = 'AskBlueCat | Offensive & Defensive Ops'
+theme = 'PaperMod'
+
+[params]
+    defaultTheme = "dark" # Start in dark mode by default
+    showCodeCopyButtons = true # Essential for cybersecurity blogs
+    displayFullContent = false
+    
+    [params.homeInfoParams]
+        Title = "AskBlueCat"
+        Content = "Strategic Operator. Penetration Tester. Offensive & Defensive Research."
