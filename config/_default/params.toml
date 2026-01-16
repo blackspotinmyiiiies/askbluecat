@@ -1,16 +1,27 @@
 colorScheme = "blowfish"
+
 defaultAppearance = "dark"
 
 [header]
+
   layout = "basic"
-  showLanguageSwitcher = true  # Ensure this is true
+
+  showLanguageSwitcher = true
+
+  logo = "img/ABC.png" # Path relative to 'static'
 
 [homepage]
-  layout = "background"       # This activates the demo splash look
-  homepageImage = "img/background.jpg" # Optional: add an image to static/img/
+
+  layout = "background" # Matches the demo splash style
+
+  homepageImage = "img/hacktheboxBG.jpg" # The demo's diagonal lines
+
   showRecent = true
+
   showRecentItems = 5
 
 [article]
+
   showReadingTime = true
+
   showTableOfContents = true
