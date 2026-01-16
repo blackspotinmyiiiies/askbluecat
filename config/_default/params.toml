@@ -9,9 +9,15 @@ logo = "img/ABC.png"
 
 [homepage]
 layout = "background"
-homepageImage = "img/hacktheboxBG.jpg"
+homepageImage = "img/background.jpg"
 showRecent = true
 showRecentItems = 5
+
+[assets]
+  favicon = "favicon.ico"
+  favicon16 = "favicon-16x16.png"
+  favicon32 = "favicon-32x32.png"
+  appleTouchIcon = "apple-touch-icon.png"
 
 [article]
 showReadingTime = true
