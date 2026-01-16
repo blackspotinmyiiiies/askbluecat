@@ -3,10 +3,11 @@ defaultAppearance = "dark"
 
 [header]
   layout = "basic"
-  showLanguageSwitcher = true
+  showLanguageSwitcher = true  # Ensure this is true
 
 [homepage]
-  layout = "background"
+  layout = "background"       # This activates the demo splash look
+  homepageImage = "img/background.jpg" # Optional: add an image to static/img/
   showRecent = true
   showRecentItems = 5
 

@@ -3,3 +3,6 @@ languageName = "English"
 weight = 1
 title = "AskBlueCat"
 description = "Offensive and Defensive Ops"
+
+[params]
+  displayName = "EN"  
