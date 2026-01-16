@@ -8,13 +8,13 @@ defaultAppearance = "dark"
 
   showLanguageSwitcher = true
 
-  logo = "static/img/ABC.png" # Path relative to 'static'
+  logo = "img/ABC.png" # Path relative to 'static'
 
 [homepage]
 
   layout = "background" # Matches the demo splash style
 
-  homepageImage = "static/img/hacktheboxBG.jpg" # The demo's diagonal lines
+  homepageImage = "img/hacktheboxBG.jpg" # The demo's diagonal lines
 
   showRecent = true
 
