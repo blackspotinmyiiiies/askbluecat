@@ -8,7 +8,7 @@ description = "Offensive and Defensive Ops"
 displayName = "EN"
 logo = "ABC.png"
 description = "Offensive and Defensive Ops"
-rtl = true
+rtl = false
 dateFormat = "16 January 2026"
 
 ["params.author"]
