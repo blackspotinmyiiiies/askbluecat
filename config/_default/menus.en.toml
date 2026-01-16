@@ -1,9 +1,19 @@
 [[main]]
-  name = "Posts"
-  pageRef = "posts"
-  weight = 10
+name = "Posts"
+pageRef = "posts"
+weight = 10
 
 [[main]]
-  name = "English"
-  params = { displayName = "EN" }
-  weight = 20
+name = "English"
+weight = 20
+
+  [main.params]
+  displayName = "EN"
+
+[[main]]
+pageRef = "askbluecat.com"
+identifier = "3KanhwbYX1"
+weight = 9_999
+
+[[footer]]
+none = "none"

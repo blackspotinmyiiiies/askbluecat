@@ -1,27 +1,21 @@
 colorScheme = "blowfish"
-
 defaultAppearance = "dark"
+autoSwitchAppearance = true
 
 [header]
-
-  layout = "basic"
-
-  showLanguageSwitcher = true
-
-  logo = "img/ABC.png" # Path relative to 'static'
+layout = "basic"
+showLanguageSwitcher = true
+logo = "img/ABC.png"
 
 [homepage]
-
-  layout = "background" # Matches the demo splash style
-
-  homepageImage = "img/hacktheboxBG.jpg" # The demo's diagonal lines
-
-  showRecent = true
-
-  showRecentItems = 5
+layout = "background"
+homepageImage = "img/hacktheboxBG.jpg"
+showRecent = true
+showRecentItems = 5
 
 [article]
+showReadingTime = true
+showTableOfContents = true
 
-  showReadingTime = true
-
-  showTableOfContents = true
+[buymeacoffee]
+identifier = ""
