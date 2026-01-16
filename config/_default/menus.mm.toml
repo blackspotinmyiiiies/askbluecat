@@ -4,6 +4,11 @@
   weight = 10
 
 [[main]]
+  name = "မှတ်တမ်းများ" # Writeups in Burmese
+  pageRef = "writeups"
+  weight = 20
+
+[[main]]
   name = "မြန်မာ"
   params = { displayName = "MM" }
   weight = 20

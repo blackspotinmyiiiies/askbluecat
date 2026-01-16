@@ -17,5 +17,11 @@ showRecentItems = 5
 showReadingTime = true
 showTableOfContents = true
 
+[author]
+  name = "ABC"
+  image = "author.png"
+  headline = "Cybersecurity Researcher"
+  bio = "Fresh prints in the snow!"
+
 [buymeacoffee]
 identifier = ""
