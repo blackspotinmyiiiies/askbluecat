@@ -1,0 +1,21 @@
+[[mounts]]
+  source = "assets"
+  target = "assets"
+[[mounts]]
+  source = "static"
+  target = "static"
+[[mounts]]
+  source = "layouts"
+  target = "layouts"
+[[mounts]]
+  source = "archetypes"
+  target = "archetypes"
+[[mounts]]
+  source = "themes/blowfish/assets"
+  target = "assets"
+[[mounts]]
+  source = "themes/blowfish/layouts"
+  target = "layouts"
+[[mounts]]
+  source = "themes/blowfish/static"
+  target = "static"
