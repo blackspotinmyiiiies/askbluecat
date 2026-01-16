@@ -12,3 +12,9 @@
   name = "English"
   params = { displayName = "EN" }
   weight = 30
+
+[[main]]
+  name = "Buy Me a Coffee"
+  url = "https://www.buymeacoffee.com/your_username"
+  weight = 40
+  pre = "<span class='relative block icon'><svg ...></svg></span>" # Optional icon

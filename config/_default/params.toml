@@ -6,6 +6,7 @@ autoSwitchAppearance = true
 layout = "basic"
 showLanguageSwitcher = true
 logo = "img/ABC.png"
+showRSS = false
 
 [homepage]
 layout = "background"
@@ -31,3 +32,8 @@ showTableOfContents = true
 
 [buymeacoffee]
 identifier = "h0neyp00p"
+
+[footer]
+  showCopyright = true
+  showPoweredBy = true
+  showThemeAppearance = true
