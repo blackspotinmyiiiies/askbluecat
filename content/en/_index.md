@@ -1,8 +1,8 @@
 ---
 title: "Welcome to AskBlueCat"
-description: "Strategic Cybersecurity Operations"
+description: "Cybersecurity Operations"
 cascade:
   showReadingTime: true
 ---
 
-This is the English homepage of your new security research hub.
+Yeah buddy, are you ready to explore into the unknown?
