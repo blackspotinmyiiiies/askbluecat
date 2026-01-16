@@ -1,0 +1,15 @@
+colorScheme = "blowfish"
+defaultAppearance = "dark"
+
+[header]
+  layout = "basic"
+  showLanguageSwitcher = true
+
+[homepage]
+  layout = "background"
+  showRecent = true
+  showRecentItems = 5
+
+[article]
+  showReadingTime = true
+  showTableOfContents = true

@@ -1,0 +1,9 @@
+[[main]]
+  name = "ဆောင်းပါးများ"
+  pageRef = "posts"
+  weight = 10
+
+[[main]]
+  name = "မြန်မာ"
+  params = { displayName = "MM" }
+  weight = 20

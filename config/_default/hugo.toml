@@ -1,0 +1,13 @@
+baseURL = "https://askbluecat.com/"
+theme = "blowfish"
+defaultContentLanguage = "en"
+
+[languages]
+  [languages.en]
+    languageName = "English"
+    contentDir = "content/en"
+    weight = 1
+  [languages.mm]
+    languageName =  "မြန်မာ"
+    contentDir = "content/mm"
+    weight = 2

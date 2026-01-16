@@ -1,8 +1,0 @@
-baseURL = 'https://askbluecat.com/'
-languageCode = 'en-us'
-title = 'AskBlueCat | Security Research'
-theme = 'ananke'
-
-[params]
-  description = "Offensive and Defensive Strategic Operations"
-  background_color_class = "bg-black" # You can use bg-blue, bg-gray, etc.
