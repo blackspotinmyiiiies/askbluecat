@@ -11,7 +11,7 @@ weight = 2
 [[main]]
 name = "ဆောင်းပါးများ"
 pre = "hackernews"
-pageRef = "posts"
+pageRef = "ဆောင်းပါးများ"
 identifier = "yPSyO9PtW6"
 weight = 1
 
