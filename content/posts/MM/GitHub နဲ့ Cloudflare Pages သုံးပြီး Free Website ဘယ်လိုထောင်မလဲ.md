@@ -2,32 +2,29 @@
 title = "GitHub နဲ့ Cloudflare Pages သုံးပြီး Free Website ဘယ်လိုထောင်မလဲ"
 date = 2026-01-15T00:00:00Z
 draft = false
-description = "A quick guide to hosting a Hugo + Blowfish site with GitHub and Cloudflare."
+description = "Hugo Framework ကိုသုံးပြီး Blowfish theme နဲ့ အတူတူ Cloudflare ပေါ် မှာ pages ထောင်ပြီး GitHub ကနေ Static Websiteလုပ်နည်း"
 tags = ["hugo", "cloudflare", "github", "blowfish", "static-site"]
-featuredImage = "/img/Gemini_Generated_Image_g1aiiag1aiiag1ai.png"
 +++
+![My Hugo + Cloudflare setup](/static/img/Gemini_Generated_Image_g1aiiag1aiiag1ai.png)
 
-Hugo + GitHub + Cloudflare Pages is a solid combo for a fast, free, and secure static website. I use it for my blog, but it works great for portfolios or docs too.
-What you’ll need
+Hugo + GitHub + Cloudflare Pages ပေါင်းပြီး Free static website ထောင်လို့ ရပါတယ်။ 
+ဘာတွေလိုမလဲဆိုတော့ 
+    Hugo installed locally (hugo ကို စက်ထဲမှာ install လုပ်ထားပါ) 
 
-    Hugo installed locally
+    GitHub account တစ်ခု ဖွင့်ထားပါ။ 
 
-    GitHub account
+    Cloudflare account တစ်ခု ဖွင့်ထားပါ။ 
 
-    Cloudflare account
+    Git သုံးနည်းလေးနည်းနည်းလောက် သိထားရပါမယ်။ AI တွေကို မေးပြီးလိုက်လုပ်လည်းရတယ်။ နည်းနည်းလောက်သိထားရင်တော့ ပိုကောင်းတာပေါ့လေ။ 
 
-    A little Git experience
+Step 1: Create repo on GitHub and Build the site locally
 
-Step 1: Build the site locally
-
-I started with the Blowfish theme on Parrot OS:
-bash
-
+ပထမဦးဆုံး  GitHub ပေါ်မှာ Repo တစ်ခု လုပ်လိုက်ပါမယ်။ ပြီးတော့ hugo နဲ့ site တစ်ခု လုပ်မယ်။ ဒါကတော့ locally ကိုယ်စက်ထဲမှာ လုပ်ရမှာဖြစ်တယ်။ GitHub ပေါ်မှာ လုပ်တာကတော့ သူပြထားတဲ့ အတိုင်း လုပ် click လိုက်ရင် ရပါပြီ။ 
+```bash
 hugo new site askbluecat
-
-Then I added Blowfish as a submodule and set up config files in config/_default.
-To support English and Myanmar languages, I added:
-
+```
+ပြီးရင် Blowfish ကို download ဆွဲပြီး သူ့ရဲ့ config ဖိုင်တွေကို ကော်ပိ ယူလိုက်မယ်။ 
+မြန်မာ လို မြင်ရဖို့ ဒီ Config ဖိုင် လေးတွေထည့်လိုက်တယ်။ 
     languages.en.toml
 
     languages.mm.toml
@@ -36,21 +33,18 @@ To support English and Myanmar languages, I added:
 
     menus.mm.toml
 
-Then I updated hugo.toml to let visitors switch between languages.
 Step 2: Push to GitHub
-bash
-
+``` bash
 git init
 git add .
 git commit -m "First commit"
 git branch -M main
-git remote add origin https://github.com/blackspotinmyiiiies/askbluecat.git
+git remote add origin https://github.com/yourusername/askbluecat.git
 git push -u origin main
+```
 
 Step 3: Deploy with Cloudflare Pages
-
-On Cloudflare Pages:
-
+ဒီအဆင့်မှာတော့ Cloudflare ပေါ်မှာ page တစ်ခု လုပ်ပြီး GitHub နဲ့ ချိတ်ရမယ်။ လွယ်ပါတယ်။ သူပြထားတာတွေကို လိုက်နှိပ်ရုံပါပဲ။ 
     Connected my GitHub repo
 
     Build command: hugo --gc --minify
@@ -59,11 +53,10 @@ On Cloudflare Pages:
 
     Production branch: main
 
-Now every push to main triggers an automatic build and deploy.
-Step 4: Personal touches
+Step 4: နည်းနည်း ဟိုပြင် ဒီ ပြင်ရင်း ကိုယ့် Domain ကို ထည့်လိုက်မယ်။ 
 
     Replaced Blowfish’s default favicons with my own logo in static/
 
     Added my custom domain askbluecat.com in Cloudflare Pages
 
-That’s it — my site is live.
+ဒါပါပဲ။ ဘယ်လို လုပ်ရမလဲ. သိချင်ရင် ဆက်သွယ်လို့ မေးမြန်းလို့ရပါတယ်။ 
