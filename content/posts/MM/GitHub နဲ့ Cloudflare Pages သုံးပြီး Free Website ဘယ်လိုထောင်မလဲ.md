@@ -5,7 +5,7 @@ draft = false
 description = "Hugo Framework ကိုသုံးပြီး Blowfish theme နဲ့ အတူတူ Cloudflare ပေါ် မှာ pages ထောင်ပြီး GitHub ကနေ Static Websiteလုပ်နည်း"
 tags = ["hugo", "cloudflare", "github", "blowfish", "static-site"]
 +++
-![My Hugo + Cloudflare setup](/static/img/Gemini_Generated_Image_g1aiiag1aiiag1ai.png)
+![My Hugo + Cloudflare setup](/img/Gemini_Generated_Image_g1aiiag1aiiag1ai.png)
 
 Hugo + GitHub + Cloudflare Pages ပေါင်းပြီး Free static website ထောင်လို့ ရပါတယ်။ 
 ဘာတွေလိုမလဲဆိုတော့ 
