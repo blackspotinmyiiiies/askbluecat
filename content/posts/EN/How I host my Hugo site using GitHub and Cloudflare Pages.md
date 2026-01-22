@@ -6,7 +6,7 @@ description = "A quick guide to hosting a Hugo + Blowfish site with GitHub and C
 tags = ["hugo", "cloudflare", "github", "blowfish", "static-site"]
 +++
 
-![My Hugo + Cloudflare setup](/static/img/Gemini_Generated_Image_g1aiiag1aiiag1ai.png)
+![My Hugo + Cloudflare setup](/img/Gemini_Generated_Image_g1aiiag1aiiag1ai.png)
 
 Hugo + GitHub + Cloudflare Pages is a solid combo for a fast, free, and secure static website. I use it for my blog, but it works great for portfolios or docs too.
 What you’ll need
