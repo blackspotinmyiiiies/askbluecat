@@ -1,0 +1,25 @@
+disabled = false
+languageCode = "en"
+languageName = "ြမန်မာ"
+weight = 2
+title = "AskBlueCat"
+
+[params]
+displayName = "MM"
+isoCode = "mm"
+rtl = false
+dateFormat = "2 January 2026"
+logo = "ABC.png"
+
+[[params.author.links]]
+github = "https://github.com/blackspotinmyiiiies"
+
+[[params.author.links]]
+linkedin = "www.linkedin.com/in/danielminthu"
+
+["params.author"]
+name = "AskBlueCat"
+email = "mthu779@proton.me"
+image = "ABC.png"
+headline = "AskBlueCat"
+bio = "Just a another typical human trying......!"

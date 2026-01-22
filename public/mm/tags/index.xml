@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on AskBlueCat</title>
+    <link>http://localhost:1313/mm/tags/</link>
+    <description>Recent content in Tags on AskBlueCat</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <managingEditor>mthu779@proton.me (AskBlueCat)</managingEditor>
+    <webMaster>mthu779@proton.me (AskBlueCat)</webMaster>
+    <copyright>© 2026 AskBlueCat</copyright>
+    <atom:link href="http://localhost:1313/mm/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+  </channel>
+</rss>

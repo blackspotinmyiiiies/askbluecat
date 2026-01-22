@@ -1,0 +1,19 @@
+[[main]]
+none = "none"
+
+[[main]]
+name = "writeups"
+pre = "blogger"
+pageRef = "writeups"
+identifier = "2BQ2x8lWFO"
+weight = 2
+
+[[main]]
+name = "ဆောင်းပါးများ"
+pre = "hackernews"
+pageRef = "posts"
+identifier = "yPSyO9PtW6"
+weight = 1
+
+[[footer]]
+none = "none"
