@@ -4,8 +4,9 @@ date = 2026-01-15T00:00:00Z
 draft = false
 description = "A quick guide to hosting a Hugo + Blowfish site with GitHub and Cloudflare."
 tags = ["hugo", "cloudflare", "github", "blowfish", "static-site"]
-featuredImage = "/img/Gemini_Generated_Image_g1aiiag1aiiag1ai.png"
 +++
+
+![My Hugo + Cloudflare setup](/static/img/Gemini_Generated_Image_g1aiiag1aiiag1ai.png)
 
 Hugo + GitHub + Cloudflare Pages is a solid combo for a fast, free, and secure static website. I use it for my blog, but it works great for portfolios or docs too.
 What you’ll need
@@ -18,13 +19,12 @@ What you’ll need
 
     A little Git experience
 
-Step 1: Build the site locally
+Step 1: Create an repo on GitHub & Build the site locally
 
-I started with the Blowfish theme on Parrot OS:
-bash
-
+I started creating a github repo and then create an site with hugo on my local OS:
+```bash
 hugo new site askbluecat
-
+```
 Then I added Blowfish as a submodule and set up config files in config/_default.
 To support English and Myanmar languages, I added:
 
@@ -38,15 +38,14 @@ To support English and Myanmar languages, I added:
 
 Then I updated hugo.toml to let visitors switch between languages.
 Step 2: Push to GitHub
-bash
-
+```bash
 git init
 git add .
 git commit -m "First commit"
 git branch -M main
 git remote add origin https://github.com/blackspotinmyiiiies/askbluecat.git
 git push -u origin main
-
+```
 Step 3: Deploy with Cloudflare Pages
 
 On Cloudflare Pages:
