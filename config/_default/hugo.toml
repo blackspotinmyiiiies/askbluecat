@@ -10,7 +10,7 @@ baseURL = "https://askbluecat.com"
 [languages]
   [languages.en]
     languageName = "English"
-    contentDir = "content/posts/"
+    contentDir = "content"
     weight = 1
   [languages.mm]
     languageName =  "မြန်မာ"
