@@ -1,3 +1,10 @@
++++
+title = "HTB-Fluffy Writeups"
+date = 2026-01-15T00:00:00Z
+draft = false
+description = "Fluffy is an easy-difficulty Windows machine designed around an assumed breach scenario, where credentials for a low-privileged user are provided"
+tags = ["hugo", "cloudflare", "github", "blowfish", "static-site"]
++++
 # Phase 1: External Reconnaissance and Initial Access
 
 **Duration**: [Start Time] → [End Time] ([X] hours)  
@@ -9,6 +16,10 @@
 ## Objective
 
 Identify and exploit externally accessible vulnerabilities to gain initial foothold into the target network.
+
+Machine Information
+
+As is common in real life Windows pentests, you will start the Fluffy box with credentials for the following account: j.fleischman / J0elTHEM4n1990!
 
 ---
 
