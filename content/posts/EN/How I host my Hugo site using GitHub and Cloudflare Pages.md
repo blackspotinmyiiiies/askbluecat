@@ -37,6 +37,7 @@ To support English and Myanmar languages, I added:
     menus.mm.toml
 
 Then I updated hugo.toml to let visitors switch between languages.
+
 Step 2: Push to GitHub
 ```bash
 git init
