@@ -1,8 +1,9 @@
 +++ 
 title = "Fluffy-CPTS-Prep-Box Writeups" 
 date = 2026-02-17T00:00:00Z
-draft = false description = "Fluffy is an easy-difficulty Windows machine designed around an assumed breach scenario, where credentials for a low-privileged user are provided" 
-tags = ["CPTS", "HTB", "Fluffy", "CPTS Prep", "Active Directory"] 
+draft = false
+description = "Fluffy is an easy-difficulty Windows machine designed around an assumed breach scenario, where credentials for a low-privileged user are provided"
+tags = ["CPTS", "HTB", "Fluffy", "CPTS Prep", "Active Directory"]
 +++
 
 
