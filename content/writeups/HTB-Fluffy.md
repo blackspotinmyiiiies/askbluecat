@@ -166,10 +166,6 @@ getting file \Upgrade_Notice.pdf of size 169963 as Upgrade_Notice.pdf (23.5 Kilo
 **Findings:** The PDF contained a notice regarding a recently disclosed vulnerability, **CVE-2025-24071 (Windows File Explorer Spoofing)** . The document explicitly referenced the risks associated with this vulnerability, suggesting that the internal IT department was aware of the threat and potentially testing it.
 
 
-![[Upgrade-Notice-PDF.png]]
-
-
-
 ``Details information about CVE-2025-24071  -Windows File Explorer Spoofing``
 ```python
 CVE-2025-24071.py 
@@ -461,16 +457,6 @@ With a new set of valid credentials, the tester performed deep Active Directory 
 bloodhound-python -c All -u P.AGILA -p <REDACTED>  -d fluffy.htb -dc DC01.fluffy.htb -ns 10.129.232.88 --zip
 ```
 
-
-![[Pasted image 20251028151436.png]]
-
-
-![[Pasted image 20251028151614.png]]
-
-![[Pasted image 20251028151835.png]]
-
-
-![[Pasted image 20251028235308.png]]
 
 **Findings:**
 - **Group Membership:** The user `p.agila` was a member of the `Service Account Managers` group.
