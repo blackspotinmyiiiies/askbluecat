@@ -14,7 +14,7 @@ The assessment successfully demonstrated a complete attack chain, moving from in
 
 - **NFS Share Exposure:** An NFS share `/profiles` was accessible to everyone, containing user profile directories with sensitive files.
 
-- **Password Discovery in Image Metadata:** Within the `Rosie.Powell` user directory, a `marketing.png` image contained embedded metadata with the password `Cicada123`, providing valid domain credentials.
+- **Password Discovery in Image Metadata:** Within the `Rosie.Powell` user directory, a `marketing.png` image contained embedded metadata with the password `<REDACTED>`, providing valid domain credentials.
 
 - **AD CS Vulnerability (ESC8):** Certificate authority enumeration revealed that web enrollment was enabled over HTTP, making the domain vulnerable to ESC8 attacks.
 
