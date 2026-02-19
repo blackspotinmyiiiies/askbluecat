@@ -13,56 +13,59 @@ baseURL = "https://askbluecat.com"
     contentDir = "content"
     weight = 1
   [languages.mm]
-    languageName =  "မြန်မာ"
+    languageName = "မြန်မာ"
     contentDir = "content/posts/"
     weight = 2
 
 [pagination]
-pagerSize = 100
+  pagerSize = 100
 
 [imaging]
-anchor = "Center"
+  anchor = "Center"
 
 [taxonomies]
-tag = "tags"
-category = "categories"
-author = "authors"
-series = "series"
+  tag = "tags"
+  category = "categories"
+  author = "authors"
+  series = "series"
 
 [sitemap]
-changefreq = "daily"
-filename = "sitemap.xml"
-priority = 0.5
+  changefreq = "daily"
+  filename = "sitemap.xml"
+  priority = 0.5
 
+# CONSOLIDATED OUTPUTS - This fixes the Google visibility issue
 [outputs]
-home = [ "HTML", "RSS", "JSON" ]
+  home = [ "HTML", "RSS", "JSON", "Sitemap" ]
+  page = [ "HTML" ]
+  section = [ "HTML", "RSS", "Sitemap" ]
 
 [related]
-threshold = 0
-toLower = false
+  threshold = 0
+  toLower = false
 
   [[related.indices]]
-  name = "tags"
-  weight = 100
+    name = "tags"
+    weight = 100
 
   [[related.indices]]
-  name = "categories"
-  weight = 100
+    name = "categories"
+    weight = 100
 
   [[related.indices]]
-  name = "series"
-  weight = 50
+    name = "series"
+    weight = 50
 
   [[related.indices]]
-  name = "authors"
-  weight = 20
+    name = "authors"
+    weight = 20
 
   [[related.indices]]
-  name = "date"
-  weight = 10
+    name = "date"
+    weight = 10
 
   [[related.indices]]
-  applyFilter = false
-  name = "fragmentrefs"
-  type = "fragments"
-  weight = 10
+    applyFilter = false
+    name = "fragmentrefs"
+    type = "fragments"
+    weight = 10
