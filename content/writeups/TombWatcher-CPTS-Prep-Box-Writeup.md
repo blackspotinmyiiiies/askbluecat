@@ -15,7 +15,7 @@ The test successfully demonstrated a complete attack chain, moving from initial 
 
 - **Initial Enumeration:** The provided credentials for `henry` were validated against SMB, LDAP, and WinRM services, revealing a standard domain user with limited access.
 
-- **Targeted Kerberoasting:** Through ACL analysis, it was discovered that `henry` had `WriteSPN` privileges over the user `alfred`. This was abused to perform a targeted Kerberoasting attack, successfully cracking the password `basketball`.
+- **Targeted Kerberoasting:** Through ACL analysis, it was discovered that `henry` had `WriteSPN` privileges over the user `alfred`. This was abused to perform a targeted Kerberoasting attack, successfully cracking the password `<REDACTED>`.
 
 - **Group Membership Manipulation:** The user `alfred` had the ability to add themselves to the `Infrastructure` group, which possessed `ReadGMSAPassword` rights over the `ansible_dev$` account.
 
