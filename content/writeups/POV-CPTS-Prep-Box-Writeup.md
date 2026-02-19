@@ -1,5 +1,5 @@
 +++
-title = "POV-CPTS-Prep-Box Writeups"
+title = "POV-CPTS-Prep-Box-Writeup.md"
 date = 2026-02-19T00:00:00Z
 draft = false
 description = "POV is a medium-difficulty Windows machine featuring subdomain enumeration, LFI in an ASP.NET application, ViewState deserialization RCE, credential extraction from PowerShell credentials, and SeDebugPrivilege abuse for SYSTEM compromise"
