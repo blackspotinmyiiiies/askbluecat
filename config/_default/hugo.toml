@@ -1,5 +1,4 @@
 theme = "blowfish"
-googleAnalytics = "GTM-NT468399"
 defaultContentLanguage = "en"
 enableRobotsTXT = true
 summaryLength = 0
@@ -7,6 +6,7 @@ buildDrafts = false
 buildFuture = false
 enableEmoji = true
 baseURL = "https://askbluecat.com"
+googleAnalytics = "G-CEHKSCPQCC"
 
 [languages]
   [languages.en]
