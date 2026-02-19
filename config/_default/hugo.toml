@@ -33,6 +33,8 @@ baseURL = "https://askbluecat.com"
   changefreq = "daily"
   filename = "sitemap.xml"
   priority = 0.5
+  # Force inclusion of all types
+  disableKinds = []
 
 # CONSOLIDATED OUTPUTS - This fixes the Google visibility issue
 [outputs]
