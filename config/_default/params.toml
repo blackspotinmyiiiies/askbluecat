@@ -24,11 +24,11 @@ enableStyledScrollbar = true
 defaultBackgroundImage = "HTBbg.jpg"
 
 [buymeacoffee]
-identifier = ""
+identifier = "askbluecat"
 globalWidget = true
 globalWidgetMessage = "Coffee in the morning is nice but beer would be really helpful!"
-globalWidgetColor = ""
-globalWidgetPosition = ""
+globalWidgetColor = "#FFDD00"
+globalWidgetPosition = "Right"
 
 [header]
 layout = "fixed-fill-blur"
