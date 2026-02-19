@@ -9,7 +9,7 @@ tags = ["CPTS", "HTB", "Postman", "CPTS Prep", "Linux", "Redis", "Webmin", "Comm
 
 ## Executive Summary
 
-During March 2020, a simulated penetration test was conducted against the Linux host "Postman" (`10.10.10.160`). The objective was to evaluate the security posture of the target and identify potential escalation paths to achieve root-level privileges.
+During March 2020, a simulated penetration test was conducted against the Linux host "Postman". The objective was to evaluate the security posture of the target and identify potential escalation paths to achieve root-level privileges.
 
 The assessment successfully demonstrated a complete attack chain, moving from initial reconnaissance to full system compromise. The following key findings were identified:
 
