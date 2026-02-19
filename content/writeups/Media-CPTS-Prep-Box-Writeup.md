@@ -14,7 +14,7 @@ The assessment successfully demonstrated a complete attack chain, moving from in
 
 - **NTLM Hash Leakage via Windows Media Player Files:** The web application allowed upload of Windows Media Player compatible files (.asx/.wax). A malicious file was crafted to force SMB authentication back to the attacker, capturing the NTLMv2 hash for the user `enox`.
 
-- **Credential Cracking:** The captured NTLMv2 hash was successfully cracked, revealing the password `1234virus@` and enabling SSH access to the target.
+- **Credential Cracking:** The captured NTLMv2 hash was successfully cracked, revealing the password `<REDACTED>` and enabling SSH access to the target.
 
 - **Source Code Analysis:** Examination of the web application's source code revealed the upload directory structure and file naming convention, exposing a path for exploitation.
 
