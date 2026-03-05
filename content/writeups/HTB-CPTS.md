@@ -159,4 +159,3 @@ It's worth it. Keep going.
 
 ---
 
-*Daniel Min Thu | CPTS | Phnom Penh, Cambodia*
